@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+
+basedir=$(cd "$(dirname "$0")" && pwd -P)
+
+cd "$basedir"
+[[ $1 = -C ]] && { shift; git clean -fdX; }
+. ./activate
+
+pytest "$@"

@@ -6,12 +6,12 @@ def test_faketwo_local_import():
     ABSENT = object()   # Unique sentinel value for getattr etc.
 
     #   `two` module is not loaded, nor bound at the top level of this module.
-    assert None is sys.modules.get('two')
-    assert None is globals().get('two')
+    assert ABSENT is sys.modules.get('two', ABSENT)
+    assert ABSENT is globals().get('two', ABSENT)
 
     #   After load, it's bound locally but not globally
     import two.faketwo
-    assert None is globals().get('two')
+    assert ABSENT is globals().get('two', ABSENT)
     assert two
     assert two.faketwo
 

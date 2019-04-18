@@ -1,32 +1,31 @@
 Python Import Experimentation/Abuse
 ===================================
 
-This repo demonstrates that, in CPython 3.4 through 3.7, a top-level
-module can replace itself with a completely different module during
-the import process.
+This repo demonstrates that, in CPython 3.4 through 3.7, a module can
+replace itself with a completely different module during the import
+process.
 
-> XXX This discusses only "top level" modules (e.g., 'foo' but not
-> 'foo.bar'). Expand for lower-level modules.
+This is because `import foo.bar` in the tested versions of Python
+appears to do the following:
+1. Bind `sys.modules['foo.bar']` to a new module object.
+2. Execute the code from the `foo/bar.py` or whatever file in the
+   context of the module object bound above.
+3. In the module that excuted `import foo.bar` bind `foo` and
+   `foo.bar` to the _current values_ of `sys.modules['foo']` and
+   `sys.modules['foo.bar']`, regardless of whether that is the actual
+   module object that it had originally created and put in
+   `sys.modules['foo']`. (XXX haven't tested the `foo` bind when
+   loading a submodule, actually.)
 
-This is because `import foo` in the tested versions of Python appears
-to do the following:
-1. Bind `sys.modules['foo']` to a new module object.
-2. Execute the code from the `.py` file in the context of the module
-   object bound above.
-3. In the module that excuted `import foo` bind `foo` to the _current
-   value_ of `sys.modules['foo']`, regardless of whether that is the
-   actual module object that it had originally created and put in
-   `sys.modules['foo']`.
-
-Thus, if the code executed during step 2 replaces `sys.modules['foo']`
+Thus, if the code executed during step 2 replaces `sys.modules['foo.bar']`
 with a different module, that new module will be the one the importer
 gets (and of course any subsequent importers).
 
 Any code in other modules that runs during step 2 and does `import
-foo` before `sys.modules['foo']` is replaced will get the old version.
-(Also see "Mutually Recursive Module Imports" below.) This means that
-it's possible that some parts of the system will have the old module
-and some the new.
+foo.bar` before `sys.modules['foo.bar']` is replaced will get the old
+version. (Also see "Mutually Recursive Module Imports" below.) This
+means that it's possible that some parts of the system will have the
+old module and some the new.
 
 This is different from the situation with [`importlib.reload()`],
 which keeps the old module and merely recompiles and reruns the module

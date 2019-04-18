@@ -1,4 +1,4 @@
-' two/faketwo.py: When loaded, replaces both two and two.faketwo '
+' two/faketwo.py: When loaded, replaces two.faketwo with two.replacement '
 
 import  sys
 from    importlib import import_module
@@ -24,5 +24,9 @@ assert sys.modules['two'].replacement.two_replacement == 22
 assert ABSENT is getattr(sys.modules['two'], 'faketwo', ABSENT)
 
 #   Insert replacement module into sys.modules.
-#   This will be overwritten after this script is finished.
+#   This works, just as it does for higher-level modules.
+sys.modules['two.faketwo'] = mod_replacement
+
+#   In parent module, set attribute for child module.
+#   This appears not to work?
 setattr(sys.modules['two'], 'faketwo', mod_replacement)

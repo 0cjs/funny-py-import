@@ -1,7 +1,7 @@
 import sys
 
 def test_faketwo_local_import():
-    ' This tests multi-level bindings. '
+    ' This tests rebinding a submodule. '
 
     ABSENT = object()   # Unique sentinel value for getattr etc.
 
@@ -23,24 +23,20 @@ def test_faketwo_local_import():
     assert doc_replacement == two.replacement.__doc__
     assert 22 == two.replacement.two_replacement
 
-    #   Sadly, though faketwo set a binding for the replacement module
-    #   (rather than itself) on `two.faketwo`, this was overwritten when
-    #   its setup code exited.
-    doc_original \
-        = ' two/faketwo.py: When loaded, replaces both two and two.faketwo '
-    assert doc_original == two.faketwo.__doc__
-    assert 'attr set in two/faketwo.py' == two.faketwo.faketwo_version
-    #   And it definitely does not have anything from replacement.
-    assert ABSENT is getattr(two.faketwo, 'two_replacement', ABSENT)
+    #   Our binding for two.faketwo is also correct.
+    assert doc_replacement == two.faketwo.__doc__
+    assert 22 == two.faketwo.two_replacement
+    #   And the replacement does not have bindings from the "real" faketwo.
+    assert ABSENT is getattr(two.faketwo, 'faketwo_version', ABSENT)
 
     #   Modules were entered into sys.modules.
     sysmod_two = sys.modules.get('two', ABSENT)
     assert ABSENT is not sysmod_two
     sysmod_two_faketwo = sys.modules.get('two.faketwo', ABSENT)
     assert ABSENT is not sysmod_two_faketwo
-    #   But, as above, contain binding to faketwo rather than the replacement
-    assert doc_original == sysmod_two_faketwo.__doc__
-    assert ABSENT is getattr(sysmod_two_faketwo, 'two_replacement', ABSENT)
+    #   And sys.modules version also is the replacement.
+    assert doc_replacement == sysmod_two_faketwo.__doc__
+    assert ABSENT is getattr(sysmod_two_faketwo, 'faketwo_version', ABSENT)
 
     #   In other words, our binding of `fakeone` created with the
     #   `import fakeone` statement above appears to have been bound to
